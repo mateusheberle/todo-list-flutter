@@ -1,0 +1,30 @@
+# Arquivos e diretórios gerados pelo Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.idea/
+.metadata
+pubspec.lock
+
+# Diretório de build
+/build/
+
+# Arquivos de configuração pessoais
+.vscode/
+
+# Arquivos específicos do sistema operacional
+.DS_Store
+*.swp
+*.swo
+*~
+
+# Arquivos de chaves de API, segredos, etc.
+.env
+
+# Diretórios de build específicos do sistema operacional
+ios/
+linux/
+macos/
+web/
+windows/
