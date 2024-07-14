@@ -6,6 +6,8 @@
 .idea/
 .metadata
 pubspec.lock
+*.iml
+analysis_options.yaml
 
 # Diretório de build
 /build/

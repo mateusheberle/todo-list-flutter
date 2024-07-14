@@ -1,4 +1,4 @@
-# Dismissible()
+# Slidable
 
     widget nativo do flutter
     permite que o usuário arraste o item para fora da lista para removê-lo.
@@ -43,14 +43,50 @@ Dismissible(
 
 ### [Pacote flutter_slidable](https://pub.dev/packages/flutter_slidable)
 
-+ elegante
-+ recursos
+- mais elegante
+- mais recursos
 
-### widget: Slidable()
 
-#### possibilidades de 'motion':
-- behind motion
-- drawer motion
-- scroll motion
-- stretch motion
+```dart
+ActionPane(
+    motion: const ScrollMotion(),
+/*  - behind motion
+    - drawer motion
+    - scroll motion
+    - stretch motion */
+    dismissible: DismissiblePane(
+// dismissible - o que fazer ao arrastar até o final
+    closeOnCancel: true,
+    confirmDismiss: () async =>
+        await _removeConfirmation(context, item) ?? false,
+    onDismissed: () => _controller.removeItem(index),
+    ),
+    children: [
+        SlidableAction(
+// slidableAction -  o que acontece quando clica no item
+            onPressed: (context) async {
+                final canRemove = await _removeConfirmation(context, item) ?? false;
+                if (canRemove) {
+                    _controller.removeItem(index);
+                }
+            },
+            backgroundColor: const Color(0xFFFE4A49),
+            foregroundColor: Colors.white,
+            icon: Icons.delete,
+            label: 'Remover',
+        ),
+    ],
+);
 
+/* dismissible
+o que fazer ao arrastar até o final
+quando o usuário começa a puxar até o final,
+os outros botões somem e aparece esse texto de 'Remover'
+                  
+    dismissible: Container(
+        child: const Center(
+            child: Text('Remover'),
+        ),
+    ),
+*/
+```

@@ -1,7 +1,7 @@
-import '../Model/item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
+import '../Model/item.dart';
 import '../Controller/controller.dart';
 
 class HomePage extends StatefulWidget {
@@ -18,6 +18,7 @@ class _HomePageState extends State<HomePage> {
   void initState() {
     super.initState();
     _controller = Controller();
+    _controller.init();
   }
 
   @override
@@ -31,7 +32,16 @@ class _HomePageState extends State<HomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('Atividade EBAC todo list'),
+        title: const Text('todo list'),
+        actions: <Widget>[
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () {
+              _controller.removeAll();
+              _controller.todoList.clear();
+            },
+          ),
+        ],
       ),
       body: ValueListenableBuilder(
         valueListenable: _controller,
@@ -42,143 +52,105 @@ class _HomePageState extends State<HomePage> {
               final item = _controller.todoList[index];
               return Slidable(
                 key: ValueKey(item.toString()),
-                // startActionPane - ação da esquerda
-                startActionPane: ActionPane(
-                  motion: const ScrollMotion(),
-                  // dismissible - o que fazer ao arrastar até o final
-                  dismissible: DismissiblePane(
-                    closeOnCancel: true,
-                    confirmDismiss: () async {
-                      return await _removeConfirmation(context, item) ?? false;
-                    },
-                    onDismissed: () {
-                      _controller.removeItem(index);
-                    },
-                  ),
-                  // dismissible - quando o usuário começa a puxar até o final,
-                  // os outros botões somem e aparece esse texto de 'Remover'
-/*
-                  dismissible: Container(
-                    child: const Center(
-                      child: Text('Remover'),
-                    ),
-                  ),
-*/
-                  children: [
-                    // slidableAction -  o que acontece quando clica no item
-                    SlidableAction(
-                      onPressed: (context) async {
-                        final canRemove =
-                            await _removeConfirmation(context, item) ?? false;
-                        if (canRemove) {
-                          _controller.removeItem(index);
-                        }
-                      },
-                      backgroundColor: const Color(0xFFFE4A49),
-                      foregroundColor: Colors.white,
-                      icon: Icons.delete,
-                      label: 'Remover',
-                    ),
-                  ],
-                ),
-                // endActionPane - ação da direita
-                endActionPane: ActionPane(
-                  motion: const ScrollMotion(),
-                  dismissible: DismissiblePane(
-                    closeOnCancel: true,
-                    confirmDismiss: () async {
-                      return await _removeConfirmation(context, item) ?? false;
-                    },
-                    onDismissed: () {
-                      _controller.removeItem(index);
-                    },
-                  ),
-                  children: [
-                    SlidableAction(
-                      onPressed: (context) async {
-                        final canRemove =
-                            await _removeConfirmation(context, item) ?? false;
-                        if (canRemove) {
-                          _controller.removeItem(index);
-                        }
-                      },
-                      backgroundColor: const Color(0xFFFE4A49),
-                      foregroundColor: Colors.white,
-                      icon: Icons.delete,
-                      label: 'Remover',
-                    ),
-                  ],
-                ),
-                child: CheckboxListTile(
-                  activeColor: Colors.green,
-                  title: Text(
-                    item.title,
-                    style: TextStyle(
-                      decoration: item.isDone
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
-                    ),
-                  ),
-                  subtitle: Text(
-                    item.description,
-                    style: TextStyle(
-                      decoration: item.isDone
-                          ? TextDecoration.lineThrough
-                          : TextDecoration.none,
-                    ),
-                  ),
-                  controlAffinity: ListTileControlAffinity.leading,
-                  visualDensity: VisualDensity.comfortable,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-                  secondary: Container(
-                    width: 120,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(8.0),
-                      color: !item.isDone ? Colors.amber : Colors.grey,
-                    ),
-                    child: GestureDetector(
-                      onTap: () async {
-                        if (!item.isDone) {
-                          _controller.titleController.text = item.title;
-                          _controller.descriptionController.text =
-                              item.description;
-                          await _callShowDialogAlert(context, item: item);
-                        } else {
-                          return;
-                        }
-                      },
-                      child: const Icon(
-                        Icons.edit,
-                        color: Colors.white,
-                        size: 36,
-                      ),
-                    ),
-                  ),
-                  value: item.isDone,
-                  onChanged: (value) {
-                    _controller.updateItem(
-                      Item(
-                        id: item.id,
-                        title: item.title,
-                        description: item.description,
-                        isDone: value ?? false,
-                      ),
-                    );
-                  },
-                ),
+                startActionPane: actionWidget(
+                    context, item, index), // startActionPane - ação da esquerda
+                endActionPane: actionWidget(
+                    context, item, index), // endActionPane - ação da direita
+                child: checkBoxWidget(item, context),
               );
             },
           );
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () async {
-          await _callShowDialogAlert(context);
-        },
-        tooltip: 'Increment',
+        onPressed: () async => await _callShowDialogAlert(context),
+        tooltip: 'Adicionar nota',
         child: const Icon(Icons.add),
       ),
+    );
+  }
+
+  ActionPane actionWidget(BuildContext context, Item item, int index) {
+    return ActionPane(
+      motion: const ScrollMotion(),
+      dismissible: DismissiblePane(
+        closeOnCancel: true,
+        confirmDismiss: () async =>
+            await _removeConfirmation(context, item) ?? false,
+        onDismissed: () => _controller.removeItem(index, item),
+      ),
+      children: [
+        SlidableAction(
+          onPressed: (context) async {
+            final canRemove = await _removeConfirmation(context, item) ?? false;
+            if (canRemove) {
+              _controller.removeItem(index, item);
+            }
+          },
+          backgroundColor: const Color(0xFFFE4A49),
+          foregroundColor: Colors.white,
+          icon: Icons.delete,
+          label: 'Remover',
+        ),
+      ],
+    );
+  }
+
+  CheckboxListTile checkBoxWidget(Item item, BuildContext context) {
+    return CheckboxListTile(
+      activeColor: Colors.teal,
+      title: Text(
+        item.title,
+        style: TextStyle(
+          decoration:
+              item.isDone ? TextDecoration.lineThrough : TextDecoration.none,
+        ),
+      ),
+      subtitle: Text(
+        item.description,
+        style: TextStyle(
+          decoration:
+              item.isDone ? TextDecoration.lineThrough : TextDecoration.none,
+        ),
+      ),
+      controlAffinity: ListTileControlAffinity.leading,
+      visualDensity: VisualDensity.comfortable,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+      secondary: Container(
+        width: 100,
+        height: 100,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(50.0),
+          color: !item.isDone ? Colors.amber : Colors.grey,
+        ),
+        child: GestureDetector(
+          onTap: () async {
+            if (!item.isDone) {
+              _controller.titleController.text = item.title;
+              _controller.descriptionController.text = item.description;
+              await _callShowDialogAlert(context, item: item);
+            } else {
+              return;
+            }
+          },
+          child: const Icon(
+            Icons.edit,
+            color: Colors.white,
+            size: 36,
+          ),
+        ),
+      ),
+      value: item.isDone,
+      onChanged: (value) {
+        _controller.updateItem(
+          Item(
+            id: item.id,
+            title: item.title,
+            description: item.description,
+            isDone: value ?? false,
+          ),
+        );
+      },
     );
   }
 
@@ -224,7 +196,7 @@ class _HomePageState extends State<HomePage> {
   Future<dynamic> _callShowDialogAlert(context, {Item? item}) {
     return showDialog(
       context: context,
-      barrierDismissible: false,
+      barrierDismissible: true,
       builder: (context) {
         return AlertDialog(
           shape: const RoundedRectangleBorder(
@@ -235,7 +207,7 @@ class _HomePageState extends State<HomePage> {
           actionsOverflowButtonSpacing: 50,
           titlePadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 32),
           titleTextStyle: const TextStyle(
-            color: Colors.blue,
+            color: Colors.teal,
             fontSize: 18,
           ),
           title: const Center(child: Text('Adicionar item')),
@@ -251,11 +223,11 @@ class _HomePageState extends State<HomePage> {
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.all(8),
-                  label: Text('title'),
-                  hintText: 'Título',
+                  label: Text('Título'),
+                  hintText: 'título',
                   hintStyle: TextStyle(
                     fontStyle: FontStyle.italic,
-                    fontSize: 12,
+                    fontSize: 14,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(
@@ -264,9 +236,8 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               ),
-              Divider(
+              const SizedBox(
                 height: 16,
-                color: Colors.grey.withOpacity(0.5),
               ),
               TextField(
                 controller: _controller.descriptionController,
@@ -274,11 +245,11 @@ class _HomePageState extends State<HomePage> {
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.all(8),
-                  label: Text('description'),
-                  hintText: 'Descrição',
+                  label: Text('Descrição'),
+                  hintText: 'descrição',
                   hintStyle: TextStyle(
                     fontStyle: FontStyle.italic,
-                    fontSize: 12,
+                    fontSize: 14,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(
@@ -295,31 +266,31 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Expanded(
                   child: TextButton(
-                      onPressed: () {
-                        if (item != null && item.id > 0) {
-                          _controller.updateItem(
-                            Item(
-                              id: item.id,
-                              title: _controller.titleController.text,
-                              description:
-                                  _controller.descriptionController.text,
-                              isDone: item.isDone,
-                            ),
-                          );
-                        } else {
-                          _controller.addItem(
+                    onPressed: () {
+                      if (item != null && item.id > 0) {
+                        _controller.updateItem(
+                          Item(
+                            id: item.id,
                             title: _controller.titleController.text,
                             description: _controller.descriptionController.text,
-                          );
-                        }
-                        _controller.titleController.clear();
-                        _controller.descriptionController.clear();
-                        Navigator.of(context).pop();
-                        FocusManager.instance.primaryFocus?.unfocus();
-                      },
-                      child: const Icon(
-                        Icons.check,
-                      )),
+                            isDone: item.isDone,
+                          ),
+                        );
+                      } else {
+                        _controller.addItem(
+                          title: _controller.titleController.text,
+                          description: _controller.descriptionController.text,
+                        );
+                      }
+                      _controller.titleController.clear();
+                      _controller.descriptionController.clear();
+                      Navigator.of(context).pop();
+                      FocusManager.instance.primaryFocus?.unfocus();
+                    },
+                    child: const Icon(
+                      Icons.check,
+                    ),
+                  ),
                 ),
               ],
             ),

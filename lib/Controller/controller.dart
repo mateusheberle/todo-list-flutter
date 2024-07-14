@@ -1,13 +1,21 @@
-import '../Model/item.dart';
 import 'package:flutter/material.dart';
+
+import '../Model/item.dart';
+import '../database/dao/todo_dao.dart';
 
 class Controller extends ValueNotifier<List<Item>> {
   List<Item> todoList = [];
   TextEditingController titleController = TextEditingController();
   TextEditingController descriptionController = TextEditingController();
+  final TodoDao _dao = TodoDao();
 
   Controller()
       : super([Item(id: 0, title: '', description: '', isDone: false)]);
+
+  void init() async {
+    todoList = await _dao.findAll();
+    notifyListeners();
+  }
 
   void addItem({required String title, required String description}) {
     if (title != '' && description != '') {
@@ -23,6 +31,7 @@ class Controller extends ValueNotifier<List<Item>> {
       }
 
       todoList.add(item);
+      _dao.save(item);
       notifyListeners();
     }
   }
@@ -43,13 +52,20 @@ class Controller extends ValueNotifier<List<Item>> {
 
     todoList.removeAt(index);
     todoList.insert(index, newItem);
-
+    _dao.update(newItem);
     _clearControllers();
     notifyListeners();
   }
 
-  void removeItem(int index) {
+  void removeItem(int index, Item item) {
     todoList.removeAt(index);
+    _dao.remove(item.id);
+    notifyListeners();
+  }
+
+  void removeAll() {
+    todoList.clear();
+    _dao.removeAll();
     notifyListeners();
   }
 

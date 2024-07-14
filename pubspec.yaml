@@ -11,6 +11,8 @@ dependencies:
     sdk: flutter
   uuid: ^3.0.4
   flutter_slidable: ^3.0.1
+  sqflite: ^2.3.0
+  path: ^1.8.0
 
 
 dev_dependencies:
