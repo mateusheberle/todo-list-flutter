@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'view/home_page.dart';
+import 'constants.dart';
+import 'view/splash_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,13 +16,13 @@ class MyApp extends StatelessWidget {
       title: 'todo list',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.teal,
-          primary: Colors.teal,
+          seedColor: Cores.verdinho,
+          primary: Cores.verdinho,
         ),
         useMaterial3: true,
       ),
       debugShowCheckedModeBanner: false,
-      home: const HomePage(),
+      home: const SplashScreen(),
     );
   }
 }

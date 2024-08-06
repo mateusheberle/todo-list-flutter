@@ -3,6 +3,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../Model/item.dart';
 import '../Controller/controller.dart';
+import '../constants.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,6 +14,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late Controller _controller;
+  final FocusNode _titleFocusNode = FocusNode();
+  final FocusNode _descriptionFocusNode = FocusNode();
 
   @override
   void initState() {
@@ -24,24 +27,65 @@ class _HomePageState extends State<HomePage> {
   @override
   void dispose() {
     _controller.dispose();
+    _titleFocusNode.dispose();
+    _descriptionFocusNode.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Cores.preto,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: const Text('todo list'),
-        actions: <Widget>[
-          IconButton(
-            icon: const Icon(Icons.delete),
-            onPressed: () {
-              _controller.removeAll();
-              _controller.todoList.clear();
-            },
-          ),
-        ],
+        backgroundColor: Cores.preto,
+        toolbarHeight: 100,
+        title: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const Text(
+              'Your Notes',
+              style: TextStyle(
+                color: Cores.branco,
+                fontSize: 50,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -3.0,
+              ),
+            ),
+            const SizedBox(width: 16), // Espaçamento entre o título e o ícone
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                height: 52,
+                width: 52,
+                decoration: BoxDecoration(
+                  color: Cores.preto,
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: Colors.white, width: 1),
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    borderRadius: BorderRadius.circular(10),
+                    onTap: () async {
+                      await _callShowDialogAlert(context);
+                    },
+                    onLongPress: () {
+                      _controller.removeAll();
+                      _controller.todoList.clear();
+                    },
+                    child: const Center(
+                      child: Icon(
+                        Icons.add,
+                        color: Cores.branco,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
       body: ValueListenableBuilder(
         valueListenable: _controller,
@@ -61,11 +105,6 @@ class _HomePageState extends State<HomePage> {
             },
           );
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () async => await _callShowDialogAlert(context),
-        tooltip: 'Adicionar nota',
-        child: const Icon(Icons.add),
       ),
     );
   }
@@ -87,8 +126,8 @@ class _HomePageState extends State<HomePage> {
               _controller.removeItem(index, item);
             }
           },
-          backgroundColor: const Color(0xFFFE4A49),
-          foregroundColor: Colors.white,
+          backgroundColor: Cores.vermelho,
+          foregroundColor: Cores.branco,
           icon: Icons.delete,
           label: 'Remover',
         ),
@@ -96,61 +135,74 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  CheckboxListTile checkBoxWidget(Item item, BuildContext context) {
-    return CheckboxListTile(
-      activeColor: Colors.teal,
-      title: Text(
-        item.title,
-        style: TextStyle(
-          decoration:
-              item.isDone ? TextDecoration.lineThrough : TextDecoration.none,
+  Container checkBoxWidget(Item item, BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Cores.preto,
+        border: Border.symmetric(
+          horizontal: BorderSide(
+            color: Cores.branco,
+            width: 1,
+          ),
         ),
       ),
-      subtitle: Text(
-        item.description,
-        style: TextStyle(
-          decoration:
-              item.isDone ? TextDecoration.lineThrough : TextDecoration.none,
+      child: CheckboxListTile(
+        checkColor: Cores.preto,
+        activeColor: Cores.verdinho,
+        shape: const CircleBorder(),
+        title: Text(
+          item.title,
+          style: TextStyle(
+            color: Cores.branco,
+            decorationColor: Cores.branco,
+            decoration:
+                item.isDone ? TextDecoration.lineThrough : TextDecoration.none,
+          ),
         ),
-      ),
-      controlAffinity: ListTileControlAffinity.leading,
-      visualDensity: VisualDensity.comfortable,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
-      secondary: Container(
-        width: 100,
-        height: 100,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(50.0),
-          color: !item.isDone ? Colors.amber : Colors.grey,
+        subtitle: Text(
+          item.description,
+          style: TextStyle(
+            color: Cores.branco,
+            decorationColor: Cores.branco,
+            decoration:
+                item.isDone ? TextDecoration.lineThrough : TextDecoration.none,
+          ),
         ),
-        child: GestureDetector(
-          onTap: () async {
-            if (!item.isDone) {
+        controlAffinity: ListTileControlAffinity.leading,
+        visualDensity: VisualDensity.comfortable,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16.0),
+        secondary: Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(50.0),
+            color: !item.isDone ? Cores.verdinho : Cores.cinza,
+          ),
+          child: GestureDetector(
+            onTap: () async {
               _controller.titleController.text = item.title;
               _controller.descriptionController.text = item.description;
               await _callShowDialogAlert(context, item: item);
-            } else {
-              return;
-            }
-          },
-          child: const Icon(
-            Icons.edit,
-            color: Colors.white,
-            size: 36,
+            },
+            child: Icon(
+              Icons.edit,
+              color: !item.isDone ? Cores.preto : Cores.branco,
+              size: 36,
+            ),
           ),
         ),
+        value: item.isDone,
+        onChanged: (value) {
+          _controller.updateItem(
+            Item(
+              id: item.id,
+              title: item.title,
+              description: item.description,
+              isDone: value ?? false,
+            ),
+          );
+        },
       ),
-      value: item.isDone,
-      onChanged: (value) {
-        _controller.updateItem(
-          Item(
-            id: item.id,
-            title: item.title,
-            description: item.description,
-            isDone: value ?? false,
-          ),
-        );
-      },
     );
   }
 
@@ -159,15 +211,20 @@ class _HomePageState extends State<HomePage> {
       context: context,
       builder: (context) {
         return AlertDialog(
+          backgroundColor: Cores.preto,
           title: const Column(
             children: [
               Icon(
                 Icons.warning_amber_rounded,
-                color: Colors.amber,
+                color: Cores.verdinho,
                 size: 50,
               ),
               Text(
                 'Remover item',
+                style: TextStyle(
+                  color: Cores.branco,
+                  fontSize: 18,
+                ),
               ),
             ],
           ),
@@ -175,7 +232,12 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Flexible(
-                child: Text("Confirmar exclusão?"),
+                child: Text(
+                  "Confirmar exclusão?",
+                  style: TextStyle(
+                    color: Cores.branco,
+                  ),
+                ),
               ),
             ],
           ),
@@ -183,10 +245,12 @@ class _HomePageState extends State<HomePage> {
           actions: <Widget>[
             TextButton(
                 onPressed: () => Navigator.of(context).pop(true),
-                child: const Text("Sim")),
+                child:
+                    const Text("Sim", style: TextStyle(color: Cores.branco))),
             TextButton(
                 onPressed: () => Navigator.of(context).pop(false),
-                child: const Text("Não")),
+                child:
+                    const Text("Não", style: TextStyle(color: Cores.branco))),
           ],
         );
       },
@@ -199,15 +263,11 @@ class _HomePageState extends State<HomePage> {
       barrierDismissible: true,
       builder: (context) {
         return AlertDialog(
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(
-              Radius.circular(8.0),
-            ),
-          ),
+          backgroundColor: Cores.cinza,
           actionsOverflowButtonSpacing: 50,
           titlePadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 32),
           titleTextStyle: const TextStyle(
-            color: Colors.teal,
+            color: Cores.branco,
             fontSize: 18,
           ),
           title: const Center(child: Text('Adicionar item')),
@@ -218,8 +278,13 @@ class _HomePageState extends State<HomePage> {
             children: [
               TextField(
                 autofocus: true,
+                focusNode: _titleFocusNode,
                 controller: _controller.titleController,
                 keyboardType: TextInputType.text,
+                style: const TextStyle(
+                  color: Cores.branco,
+                  fontSize: 20,
+                ),
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.all(8),
@@ -228,20 +293,33 @@ class _HomePageState extends State<HomePage> {
                   hintStyle: TextStyle(
                     fontStyle: FontStyle.italic,
                     fontSize: 14,
+                    color: Cores.branco,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(
                       Radius.circular(7.0),
                     ),
+                    borderSide: BorderSide(
+                      color: Cores.branco,
+                      width: 1,
+                    ),
                   ),
                 ),
+                onSubmitted: (value) {
+                  FocusScope.of(context).requestFocus(_descriptionFocusNode);
+                },
               ),
               const SizedBox(
                 height: 16,
               ),
               TextField(
+                focusNode: _descriptionFocusNode,
                 controller: _controller.descriptionController,
                 keyboardType: TextInputType.text,
+                style: const TextStyle(
+                  color: Cores.branco,
+                  fontSize: 20,
+                ),
                 decoration: const InputDecoration(
                   isDense: true,
                   contentPadding: EdgeInsets.all(8),
@@ -250,13 +328,39 @@ class _HomePageState extends State<HomePage> {
                   hintStyle: TextStyle(
                     fontStyle: FontStyle.italic,
                     fontSize: 14,
+                    color: Cores.branco,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.all(
                       Radius.circular(7.0),
                     ),
+                    borderSide: BorderSide(
+                      color: Cores.branco,
+                      width: 1,
+                    ),
                   ),
                 ),
+                onSubmitted: (value) {
+                  if (item != null && item.id > 0) {
+                    _controller.updateItem(
+                      Item(
+                        id: item.id,
+                        title: _controller.titleController.text,
+                        description: _controller.descriptionController.text,
+                        isDone: item.isDone,
+                      ),
+                    );
+                  } else {
+                    _controller.addItem(
+                      title: _controller.titleController.text,
+                      description: _controller.descriptionController.text,
+                    );
+                  }
+                  _controller.titleController.clear();
+                  _controller.descriptionController.clear();
+                  Navigator.of(context).pop();
+                  FocusManager.instance.primaryFocus?.unfocus();
+                },
               ),
             ],
           ),
@@ -266,31 +370,75 @@ class _HomePageState extends State<HomePage> {
               children: [
                 Expanded(
                   child: TextButton(
-                    onPressed: () {
-                      if (item != null && item.id > 0) {
-                        _controller.updateItem(
-                          Item(
-                            id: item.id,
+                      onPressed: () {
+                        if (item != null && item.id > 0) {
+                          _controller.updateItem(
+                            Item(
+                              id: item.id,
+                              title: _controller.titleController.text,
+                              description:
+                                  _controller.descriptionController.text,
+                              isDone: !item.isDone,
+                            ),
+                          );
+                        } else {
+                          _controller.addItem(
                             title: _controller.titleController.text,
                             description: _controller.descriptionController.text,
-                            isDone: item.isDone,
+                          );
+                        }
+                        _controller.titleController.clear();
+                        _controller.descriptionController.clear();
+                        Navigator.of(context).pop();
+                        FocusManager.instance.primaryFocus?.unfocus();
+                      },
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Container(
+                          height: 52,
+                          width: 52,
+                          decoration: BoxDecoration(
+                            color: Cores.cinza,
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(color: Colors.white, width: 1),
                           ),
-                        );
-                      } else {
-                        _controller.addItem(
-                          title: _controller.titleController.text,
-                          description: _controller.descriptionController.text,
-                        );
-                      }
-                      _controller.titleController.clear();
-                      _controller.descriptionController.clear();
-                      Navigator.of(context).pop();
-                      FocusManager.instance.primaryFocus?.unfocus();
-                    },
-                    child: const Icon(
-                      Icons.check,
-                    ),
-                  ),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(10),
+                              onTap: () {
+                                if (item != null && item.id > 0) {
+                                  _controller.updateItem(
+                                    Item(
+                                      id: item.id,
+                                      title: _controller.titleController.text,
+                                      description: _controller
+                                          .descriptionController.text,
+                                      isDone: item.isDone,
+                                    ),
+                                  );
+                                } else {
+                                  _controller.addItem(
+                                    title: _controller.titleController.text,
+                                    description:
+                                        _controller.descriptionController.text,
+                                  );
+                                }
+                                _controller.titleController.clear();
+                                _controller.descriptionController.clear();
+                                Navigator.of(context).pop();
+                                FocusManager.instance.primaryFocus?.unfocus();
+                              },
+                              child: const Center(
+                                child: Icon(
+                                  Icons.check,
+                                  color: Cores.branco,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      )),
                 ),
               ],
             ),
