@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'constants.dart';
 import 'view/splash_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // await getDatabase();
   runApp(const MyApp());
 }
 

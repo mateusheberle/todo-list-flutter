@@ -1,20 +1,24 @@
 import 'package:sqflite/sqflite.dart';
 import '../../Model/item.dart';
-import '../app_database.dart';
+import 'database_helper.dart';
 
 class TodoDao {
-  static const String tableSql = 'CREATE TABLE $_tableName('
+  static const String tableSql = 'CREATE TABLE $_tableName ('
       '$_id INTEGER PRIMARY KEY, '
       '$_title TEXT, '
       '$_description TEXT, '
       '$_isDone INTEGER, '
-      ');';
+      ')';
 
   static const String _tableName = 'todo';
   static const String _id = 'id';
   static const String _title = 'title';
   static const String _description = 'description';
   static const String _isDone = 'isDone';
+
+  Future<Database> getDatabase() async {
+    return await DatabaseHelper.instance.database;
+  }
 
   Future<int> save(Item item) async {
     final Database db = await getDatabase();
